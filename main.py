@@ -14,6 +14,9 @@ _state = {
     "round_score": 0
 }
 
+def get_game_data():
+    return game.get_data()
+
 def start_game(max_rounds=5):
     _state["round"] = 0
     _state["max_rounds"] = max_rounds

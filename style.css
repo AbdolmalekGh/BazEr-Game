@@ -14,14 +14,72 @@ body {
     min-height: 100vh;
 }
 
-.container {
+.main-wrapper {
+    display: flex;
+    gap: 20px;
     width: 100%;
-    max-width: 640px;
+    max-width: 1000px;
+}
+
+.container {
+    flex: 2;
     background: #1e1e1e;
     border: 1px solid #333;
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar {
+    flex: 1;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.sidebar h2 {
+    color: #6cf;
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+
+.sidebar-sub {
+    color: #888;
+    font-size: 12px;
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+.ref-category h3 {
+    color: #ffb74d;
+    font-size: 13px;
+    margin: 10px 0 4px 0;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 2px;
+}
+
+.ref-category ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+
+.ref-category li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 3px 0;
+    color: #ccc;
+}
+
+.ref-category li strong {
+    color: #81c784;
 }
 
 h1 {
@@ -44,7 +102,7 @@ h1 {
     border-radius: 4px;
     padding: 14px;
     min-height: 220px;
-    max-height: 360px;
+    max-height: 320px;
     overflow-y: auto;
     white-space: pre-wrap;
     margin-bottom: 20px;
@@ -145,14 +203,11 @@ button:disabled {
     height: 100%;
     background-color: #6cf;
     width: 0%;
-    transition: width 0.3s ease-in-out; /* تغییر نرم بر اساس درصد واقعی */
+    transition: width 0.3s ease-in-out;
 }
 
-@keyframes loadingAnimation {
-    0% {
-        transform: translateX(-100%);
-    }
-    100% {
-        transform: translateX(250%);
+@media (max-width: 768px) {
+    .main-wrapper {
+        flex-direction: column;
     }
 }

@@ -6,6 +6,8 @@ DATA = {
     "nationality": {"African": 10, "European": 100, "Asian": 50} 
 }
 
+def get_data():
+    return DATA
 
 def pick_random_combo():
     import random

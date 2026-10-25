@@ -8,6 +8,7 @@ const loadingContainer = document.getElementById("loading-container");
 const loadingTextSpan = document.getElementById("loading-text");
 const progressPercent = document.getElementById("progress-percent");
 const progressFill = document.getElementById("progressFill");
+const referenceContent = document.getElementById("referenceContent");
 
 let pyodide = null;
 
@@ -28,7 +29,6 @@ function appendLog(text, cls) {
     log.scrollTop = log.scrollHeight;
 }
 
-// تابع کمکی برای اجرای امن کدهای پایتون و جلوگیری از فریز شدن
 function runPy(code) {
     try {
         return pyodide.runPython(code);
@@ -37,6 +37,28 @@ function runPy(code) {
         console.error(err);
         return null;
     }
+}
+
+function renderReferenceTable() {
+    const rawData = runPy(`
+import json
+json.dumps(main.get_game_data())
+    `);
+    if (!rawData) return;
+
+    const data = JSON.parse(rawData);
+    let html = "";
+
+    for (const [category, items] of Object.entries(data)) {
+        html += `<div class="ref-category">`;
+        html += `<h3>${category}</h3>`;
+        html += `<ul>`;
+        for (const [key, val] of Object.entries(items)) {
+            html += `<li><span>${key}</span> <strong>${val}</strong></li>`;
+        }
+        html += `</ul></div>`;
+    }
+    referenceContent.innerHTML = html;
 }
 
 async function main() {
@@ -75,6 +97,9 @@ import main
         `);
         
         updateProgress(100, "Ready!");
+
+        // رندر کردن جدول امتیازها که همیشه کنار دست کاربر باشد
+        renderReferenceTable();
 
         setTimeout(() => {
             loadingContainer.style.display = "none";
