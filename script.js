@@ -5,20 +5,20 @@ const nextBtn = document.getElementById("nextBtn");
 const restartBtn = document.getElementById("restartBtn");
 const controls = document.getElementById("controls");
 const loadingContainer = document.getElementById("loading-container");
-const loadingText = document.getElementById("loading");
-const dotsSpan = document.getElementById("dots");
+const loadingTextSpan = document.getElementById("loading-text");
+const progressPercent = document.getElementById("progress-percent");
+const progressFill = document.getElementById("progressFill");
 
 let pyodide = null;
 
-// انیمیشن سه نقطه (...)
-const dotsPattern = [".", "..", "...", "..", "."];
-let dotsIndex = 0;
-const dotsInterval = setInterval(() => {
-    if (dotsSpan) {
-        dotsIndex = (dotsIndex + 1) % dotsPattern.length;
-        dotsSpan.textContent = dotsPattern[dotsIndex];
+function updateProgress(percent, text) {
+    const p = Math.min(100, Math.max(0, percent));
+    progressFill.style.width = p + "%";
+    progressPercent.textContent = Math.round(p) + "%";
+    if (text) {
+        loadingTextSpan.textContent = text;
     }
-}, 400);
+}
 
 function appendLog(text, cls) {
     const span = document.createElement("span");
@@ -28,46 +28,85 @@ function appendLog(text, cls) {
     log.scrollTop = log.scrollHeight;
 }
 
+// تابع کمکی برای اجرای امن کدهای پایتون و جلوگیری از فریز شدن
+function runPy(code) {
+    try {
+        return pyodide.runPython(code);
+    } catch (err) {
+        appendLog("Runtime Error: " + err.message, "wrong");
+        console.error(err);
+        return null;
+    }
+}
+
 async function main() {
-    pyodide = await loadPyodide();
+    let currentPercent = 0;
+    
+    const progressInterval = setInterval(() => {
+        if (currentPercent < 85) {
+            currentPercent += Math.floor(Math.random() * 5) + 2;
+            if (currentPercent > 85) currentPercent = 85;
+            updateProgress(currentPercent, "Downloading Python Runtime...");
+        }
+    }, 150);
 
-    const [gameSrc, mainSrc] = await Promise.all([
-        fetch("game.py").then(r => r.text()),
-        fetch("main.py").then(r => r.text())
-    ]);
+    try {
+        pyodide = await loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"
+        });
 
-    pyodide.FS.writeFile("/home/pyodide/game.py", gameSrc);
-    pyodide.FS.writeFile("/home/pyodide/main.py", mainSrc);
+        clearInterval(progressInterval);
+        updateProgress(90, "Loading game files...");
 
-    pyodide.runPython(`
+        const [gameSrc, mainSrc] = await Promise.all([
+            fetch("game.py").then(r => r.text()),
+            fetch("main.py").then(r => r.text())
+        ]);
+
+        updateProgress(95, "Initializing environment...");
+
+        pyodide.FS.writeFile("/home/pyodide/game.py", gameSrc);
+        pyodide.FS.writeFile("/home/pyodide/main.py", mainSrc);
+
+        runPy(`
 import sys
 sys.path.insert(0, "/home/pyodide")
 import main
-    `);
+        `);
         
-    // متوقف کردن انیمیشن و مخفی‌سازی لودینگ
-    clearInterval(dotsInterval);
-    loadingContainer.style.display = "none";
-    controls.style.display = "block";
+        updateProgress(100, "Ready!");
 
-    appendLog("Welcome! Guess the product.", "info");
-    startNewGame();
+        setTimeout(() => {
+            loadingContainer.style.display = "none";
+            controls.style.display = "block";
+            appendLog("Welcome! Guess the product.", "info");
+            startNewGame();
+        }, 400);
+
+    } catch (err) {
+        clearInterval(progressInterval);
+        loadingTextSpan.textContent = "Failed to load Python runtime.";
+        progressFill.style.backgroundColor = "#e57373";
+        appendLog("Error: " + err, "wrong");
+    }
 }
 
 function startNewGame() {
-    pyodide.runPython("main.start_game()");
+    runPy("main.start_game()");
     log.innerHTML = "";
     appendLog("New game started.", "info");
     startNextRound();
 }
 
 function startNextRound() {
-    const result = pyodide.runPython(`
+    const rawResult = runPy(`
 import json
 json.dumps(main.start_round())
     `);
+    
+    if (!rawResult) return;
 
-    const data = JSON.parse(result);
+    const data = JSON.parse(rawResult);
     if (data.error) {
         appendLog(data.error, "wrong");
         showRestart();
@@ -90,11 +129,14 @@ async function submitGuess() {
     const guess = guessInput.value.trim();
     if (!guess) return;
 
-    const result = pyodide.runPython(`
+    const rawResult = runPy(`
 import json
 json.dumps(main.submit_guess("${guess}"))
     `);
-    const data = JSON.parse(result);
+    
+    if (!rawResult) return;
+
+    const data = JSON.parse(rawResult);
 
     if (data.error) {
         appendLog(data.error, "wrong");
@@ -124,10 +166,14 @@ function endRound() {
     guessBtn.disabled = true;
     guessBtn.style.display = "none";
 
-    const state = JSON.parse(pyodide.runPython(`
+    const rawState = runPy(`
 import json
 json.dumps(main.get_state())
-    `));
+    `);
+
+    if (!rawState) return;
+
+    const state = JSON.parse(rawState);
     
     if (state.round < state.max_rounds) {
         nextBtn.style.display = "inline-block";
@@ -157,7 +203,4 @@ restartBtn.addEventListener("click", () => {
     startNewGame();
 });
 
-main().catch(err => {
-    clearInterval(dotsInterval);
-    loadingText.textContent = "Failed to load Python runtime: " + err;
-});
+main();
