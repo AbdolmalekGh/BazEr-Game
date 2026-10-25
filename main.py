@@ -1,23 +1,95 @@
-import random
 import game
-score = 0
-print("hi, welcome to more mathematics because you love them for some reason:")
-while True:
-    print(game.color, game.weight, game.clarity, game.quality, game.nationality, sep="\n")
-    comp_keys = []
-    comp_value = 1
-    factors = [game.color, game.weight, game.clarity, game.quality, game.nationality]
-    for i in range(5):
-        length = len(factors[i])
-        rand = random.randint(0, length - 1)
-        subject = (list(factors[i].keys()))[rand]
-        comp_keys += [subject]
-        comp_value *= factors[i][subject]
-    print(comp_keys)
-    print("can you guess what it is?")
-    outcome = game.guessing(comp_value)
-    score += outcome
-    print(score)
-    if str(input(f"do you want to quit?[n, y]")).lower() == "y":
-        break
-print(score)
+
+MAX_ATTEMPTS = 5
+POINTS_CORRECT = 15
+POINTS_WRONG = -10
+
+_state = {
+    "round": 0,
+    "max_rounds": 5,
+    "total_score": 0,
+    "answer": 0,
+    "keys": [],
+    "attempts": 0,
+    "round_score": 0
+}
+
+def start_game(max_rounds=5):
+    _state["round"] = 0
+    _state["max_rounds"] = max_rounds
+    _state["total_score"] = 0
+    return "Game started."
+
+def start_round():
+    if _state["round"] >= _state["max_rounds"]:
+        return {"error": "No rounds left."}
+    
+    _state["round"] += 1
+    _state["attempts"] = 0
+    _state["round_score"] = 0
+    keys, answer = game.pick_random_combo()
+    _state["keys"] = keys
+    _state["answer"] = answer
+
+    return {
+        "round": _state["round"],
+        "max_rounds": _state["max_rounds"],
+        "keys": keys,
+        "attempts_left": MAX_ATTEMPTS
+    }
+
+def submit_guess(guess_str):
+    if _state["round"] == 0:
+        return {"error": "No active round."}
+    
+    if _state["attempts"] >= MAX_ATTEMPTS:
+        return {"error": "No attempts left."}
+    
+    try:
+        guess = int(guess_str)
+    except ValueError:
+        return {"error": "Please enter a whole number."}
+    
+    _state["attempts"] += 1
+    attempts_left = MAX_ATTEMPTS - _state["attempts"]
+
+    if guess == _state["answer"]:
+        _state["round_score"] += POINTS_CORRECT
+        _state["total_score"] += _state["round_score"]
+
+        return {
+            "result": "correct",
+            "message": f"Correct! The answer was {_state['answer']}.",
+            "round_score": _state["round_score"],
+            "total_score": _state["total_score"],
+            "attempts_left": attempts_left, 
+        }
+    
+    _state["round_score"] += POINTS_WRONG
+
+    if attempts_left == 0:
+        _state["total_score"] += _state["round_score"]
+        
+        return {
+            "result": "wrong",
+            "message": f"Out of attempts. The answer was {_state['answer']}.",
+            "round_score": _state["round_score"],
+            "total_score": _state["total_score"],
+            "attempts_left": 0
+        }
+
+    return {
+        "result": "wrong",
+        "message": f"Wrong guess! Try again.",
+        "round_score": _state["round_score"],
+        "total_score": _state["total_score"],
+        "attempts_left": attempts_left
+    }
+
+def get_state():
+    return {
+        "round": _state["round"],
+        "max_rounds": _state["max_rounds"],
+        "total_score": _state["total_score"],
+        "attempts_left": MAX_ATTEMPTS - _state["attempts"],
+    }

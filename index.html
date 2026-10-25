@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>More Mathematics</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="container">
+            <h1>More Mathematics</h1>
+            <p class="subtitle">Guess the product of the hidden attributes.</p>
+
+            <div id="log"></div>
+
+            <div id="controls" style="display:none;">
+                <div class="input-group">
+                    <input id="guessInput" type="number" placeholder="Your guess" />
+                    <button id="guessBtn">Guess</button>
+                </div>
+                <button id="nextBtn" style="display: none;">Next Round</button>
+                <button id="restartBtn" style="display: none;">Restart</button>
+            </div>
+
+            <div id="loading-container">
+                <p id="loading">Loading Python runtime<span id="dots">.</span></p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+        <script src="script.js"></script>
+    </body>
+</html>
