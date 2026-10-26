@@ -8,7 +8,7 @@ body {
     color: #e0e0e0;
     margin: 0;
     padding: 20px;
-    display: flex;
+    display:grid;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
@@ -204,6 +204,27 @@ button:disabled {
     background-color: #6cf;
     width: 0%;
     transition: width 0.3s ease-in-out;
+}
+
+.site-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.site-footer span {
+    color: #e57373; /* رنگ قلب یا آیکون */
+}
+
+.site-footer a {
+    color: #6cf;
+    text-decoration: none;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
 }
 
 @media (max-width: 768px) {
